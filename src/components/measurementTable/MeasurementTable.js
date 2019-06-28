@@ -13,6 +13,7 @@ import { Tooltip } from './../tooltip';
 
 class MeasurementTable extends Component {
   static propTypes = {
+    freehandData: PropTypes.array,
     measurementCollection: PropTypes.array.isRequired,
     timepoints: PropTypes.array.isRequired,
     overallWarnings: PropTypes.object.isRequired,
@@ -35,6 +36,10 @@ class MeasurementTable extends Component {
 
   state = {
     selectedKey: null,
+  };
+
+  handleClick = () => {
+    console.log('Freehand Data : ', this.props.freehandData);
   };
 
   render() {
@@ -75,6 +80,7 @@ class MeasurementTable extends Component {
         <ScrollableArea>
           <div>{this.getMeasurementsGroups()}</div>
         </ScrollableArea>
+        <button onClick={this.handleClick}>Display measurements</button>
       </div>
     );
   }
