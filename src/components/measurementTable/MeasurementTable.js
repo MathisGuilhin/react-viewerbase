@@ -10,6 +10,8 @@ import PropTypes from 'prop-types';
 import { ScrollableArea } from './../../ScrollableArea/ScrollableArea.js';
 import { TableList } from './../tableList';
 import { Tooltip } from './../tooltip';
+import cornerstoneTools from 'cornerstone-tools';
+import external from '../../../../cornerstoneTools/src/externalModules.js';
 
 class MeasurementTable extends Component {
   static propTypes = {
@@ -40,6 +42,7 @@ class MeasurementTable extends Component {
 
   handleClick = () => {
     console.log('Freehand Data : ', this.props.freehandData);
+    const jsonString = JSON.stringify(this.props.freehandData);
   };
 
   render() {
@@ -81,6 +84,8 @@ class MeasurementTable extends Component {
           <div>{this.getMeasurementsGroups()}</div>
         </ScrollableArea>
         <button onClick={this.handleClick}>Display measurements</button>
+        <button>Interpolate segmentation</button>
+        <button>Save</button>
       </div>
     );
   }
