@@ -10,8 +10,6 @@ import PropTypes from 'prop-types';
 import { ScrollableArea } from './../../ScrollableArea/ScrollableArea.js';
 import { TableList } from './../tableList';
 import { Tooltip } from './../tooltip';
-import cornerstoneTools from 'cornerstone-tools';
-import external from '../../../../cornerstoneTools/src/externalModules.js';
 
 class MeasurementTable extends Component {
   static propTypes = {
@@ -40,9 +38,48 @@ class MeasurementTable extends Component {
     selectedKey: null,
   };
 
-  handleClick = () => {
+  displayMeasurements = () => {
     console.log('Freehand Data : ', this.props.freehandData);
-    const jsonString = JSON.stringify(this.props.freehandData);
+  };
+
+  saveMeasurements = () => {
+    console.log('Freehand Data', this.props.freehandData);
+    var mesures = this.props.freehandData[0];
+    /*
+    var mesures = [];
+    for(let i = 0; i < this.props.freehandData.length; i++){
+      var mesure = {};
+      mesure.instanceNumber = {};
+      mesure.points = [];
+      mesure.instanceNumber = this.props.freehandData[i].frameIndex;
+      for(let j = 0; j < this.props.freehandData[i].handles.points.length; j++){
+        var point = {
+          x: this.props.freehandData[i].handles.points[j].x,
+          y: this.props.freehandData[i].handles.points[j].y,
+        };
+        mesure.points.push(point);
+      }
+      mesures.push(mesure);
+    }
+    */
+    var jsonString = JSON.stringify(mesures);
+    var FileSaver = require('file-saver');
+    var blob = new Blob([jsonString], {
+      type: 'text/plain;charset=utf-8',
+    });
+    FileSaver.saveAs(blob, 'measurements.txt');
+  };
+
+  loadMeasurements = () => {
+    var reader = new FileReader();
+    var fileText = '';
+
+    reader.onload = function(event) {
+      fileText = reader.result;
+      var measurementsLoaded = JSON.parse(fileText);
+    };
+
+    reader.readAsText(this.refs.test1.files[0]);
   };
 
   render() {
@@ -83,9 +120,10 @@ class MeasurementTable extends Component {
         <ScrollableArea>
           <div>{this.getMeasurementsGroups()}</div>
         </ScrollableArea>
-        <button onClick={this.handleClick}>Display measurements</button>
-        <button>Interpolate segmentation</button>
-        <button>Save</button>
+        <button onClick={this.displayMeasurements}>Display measurements</button>
+        <button onClick={this.saveMeasurements}>Save measurements</button>
+        <button onClick={this.loadMeasurements}>Load measurements</button>
+        <input type="file" id="files" name="files[]" ref="test1" multiple />
       </div>
     );
   }
