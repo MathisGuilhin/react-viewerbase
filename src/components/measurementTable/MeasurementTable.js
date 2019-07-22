@@ -45,9 +45,13 @@ class MeasurementTable extends Component {
   };
 
   saveMeasurements = () => {
+    var patientId;
     //Get displayed mesures
     for (let i = 0; i < this.props.freehandData.length; i++) {
       this.props.freehandData[i].displayed = false;
+      if (!patientId) {
+        patientId = this.props.freehandData[i].patientId;
+      }
     }
     var mesures = this.props.freehandData;
 
@@ -58,6 +62,9 @@ class MeasurementTable extends Component {
       for (let i = 0; i < measurementTab.length; i++) {
         if (measurementTab[i].displayed == false) {
           mesures.push(measurementTab[i]);
+          if (!patientId) {
+            patientId = measurementTab[i].patientId;
+          }
         }
       }
     });
@@ -68,7 +75,7 @@ class MeasurementTable extends Component {
     var blob = new Blob([jsonString], {
       type: 'text/plain;charset=utf-8',
     });
-    FileSaver.saveAs(blob, 'measurements.txt');
+    FileSaver.saveAs(blob, patientId);
   };
 
   loadMeasurements = () => {
