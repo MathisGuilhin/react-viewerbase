@@ -11,6 +11,8 @@ import { ScrollableArea } from './../../ScrollableArea/ScrollableArea.js';
 import { TableList } from './../tableList';
 import { Tooltip } from './../tooltip';
 
+import conerstoneTools from 'cornerstone-tools';
+
 class MeasurementTable extends Component {
   static propTypes = {
     freehandData: PropTypes.array,
@@ -43,25 +45,24 @@ class MeasurementTable extends Component {
   };
 
   saveMeasurements = () => {
-    console.log('Freehand Data', this.props.freehandData);
-    var mesures = this.props.freehandData[0];
-    /*
-    var mesures = [];
-    for(let i = 0; i < this.props.freehandData.length; i++){
-      var mesure = {};
-      mesure.instanceNumber = {};
-      mesure.points = [];
-      mesure.instanceNumber = this.props.freehandData[i].frameIndex;
-      for(let j = 0; j < this.props.freehandData[i].handles.points.length; j++){
-        var point = {
-          x: this.props.freehandData[i].handles.points[j].x,
-          y: this.props.freehandData[i].handles.points[j].y,
-        };
-        mesure.points.push(point);
-      }
-      mesures.push(mesure);
+    //Get displayed mesures
+    for (let i = 0; i < this.props.freehandData.length; i++) {
+      this.props.freehandData[i].displayed = false;
     }
-    */
+    var mesures = this.props.freehandData;
+
+    //Get file mesures that hadn't been loaded
+    var loadedData = cornerstoneTools.globalImageIdSpecificToolStateManager.saveCustomToolState();
+    Object.keys(loadedData).forEach(function(key) {
+      var measurementTab = loadedData[key];
+      for (let i = 0; i < measurementTab.length; i++) {
+        if (measurementTab[i].displayed == false) {
+          mesures.push(measurementTab[i]);
+        }
+      }
+    });
+
+    //Save in a txt file (JSON format)
     var jsonString = JSON.stringify(mesures);
     var FileSaver = require('file-saver');
     var blob = new Blob([jsonString], {
@@ -77,6 +78,42 @@ class MeasurementTable extends Component {
     reader.onload = function(event) {
       fileText = reader.result;
       var measurementsLoaded = JSON.parse(fileText);
+
+      //Get the ID of the current displayed image
+      var enabledElement = cornerstoneTools.external.cornerstone.getEnabledElements()[0];
+      var enabledImageId = enabledElement.image.imageId;
+
+      var toolState = [];
+
+      for (let i = 0; i < measurementsLoaded.length; i++) {
+        var imageId =
+          'wadors:https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs/studies/' +
+          measurementsLoaded[i].studyInstanceUid +
+          '/series/' +
+          measurementsLoaded[i].seriesInstanceUid +
+          '/instances/' +
+          measurementsLoaded[i].sopInstanceUid +
+          '/frames/1';
+        if (imageId == enabledImageId) {
+          //Display the segmentation of the current displayed image
+          measurementsLoaded[i].displayed = true;
+          cornerstoneTools.addToolState(
+            enabledElement.element,
+            'FreehandMouse',
+            measurementsLoaded[i]
+          );
+        }
+        //Set tool states in the state manager for future drawing in FreehandMouseTool
+        if (!toolState[imageId]) {
+          toolState[imageId] = [];
+          toolState[imageId][0] = measurementsLoaded[i];
+        } else {
+          toolState[imageId].push(measurementsLoaded[i]);
+        }
+      }
+      cornerstoneTools.globalImageIdSpecificToolStateManager.restoreCustomToolState(
+        toolState
+      );
     };
 
     reader.readAsText(this.refs.test1.files[0]);
