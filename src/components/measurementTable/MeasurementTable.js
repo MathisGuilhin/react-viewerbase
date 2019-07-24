@@ -175,8 +175,11 @@ class MeasurementTable extends Component {
         toolState
       );
     };
-
-    reader.readAsText(this.refs.test1.files[0]);
+    if (this.refs.test1.files[0]) {
+      reader.readAsText(this.refs.test1.files[0]);
+    } else {
+      console.log('Aucun fichier de mesure renseigné');
+    }
   };
 
   render() {
