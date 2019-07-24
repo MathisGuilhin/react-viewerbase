@@ -44,6 +44,59 @@ class MeasurementTable extends Component {
     console.log('Freehand Data : ', this.props.freehandData);
   };
 
+  saveMetadata = () => {
+    var patientId;
+
+    //Create the metadata to be saved
+    var metadata = {};
+    this.props.freehandData.forEach(function(measurement) {
+      if (!patientId) {
+        patientId = measurement.patientId;
+      }
+      if (!metadata.patientMetadata) {
+        metadata.patientMetadata = measurement.metadata.patient;
+        metadata.studyMetadata = measurement.metadata.study;
+      }
+      if (!metadata[measurement.seriesInstanceUid]) {
+        metadata[measurement.seriesInstanceUid] = [];
+        metadata[measurement.seriesInstanceUid].seriesMetadata =
+          measurement.metadata.series;
+      }
+
+      var instanceMetadata = {
+        seriesNumber: measurement.metadata.instance.seriesNumber,
+        acquisitionNumber: measurement.metadata.instance.acquisitionNumber,
+        imageNumber: measurement.metadata.instance.imageNumber,
+        imagePositionPatient:
+          measurement.metadata.instance.imagePositionPatient,
+        imageOrientationPatient:
+          measurement.metadata.instance.imageOrientationPatient,
+        frameOfReferenceUID: measurement.metadata.instance.frameOfReferenceUID,
+        laterality: measurement.metadata.instance.laterality,
+        imagesInAcquisition: measurement.metadata.instance.imagesInAcquisition,
+        sliceLocation: measurement.metadata.instance.sliceLocation,
+      };
+      instanceMetadata.points = [];
+      measurement.handles.points.forEach(function(FreehandHandleData) {
+        var point = {
+          x: FreehandHandleData.x,
+          y: FreehandHandleData.y,
+        };
+        instanceMetadata.points.push(point);
+      });
+      metadata[measurement.seriesInstanceUid].push(instanceMetadata);
+    });
+
+    console.log('metadata', metadata);
+    //Save in a txt file (JSON format)
+    var jsonString = JSON.stringify(metadata);
+    var FileSaver = require('file-saver');
+    var blob = new Blob([jsonString], {
+      type: 'text/plain;charset=utf-8',
+    });
+    FileSaver.saveAs(blob, patientId + 'metadata');
+  };
+
   saveMeasurements = () => {
     var patientId;
     //Get displayed mesures
@@ -165,6 +218,7 @@ class MeasurementTable extends Component {
           <div>{this.getMeasurementsGroups()}</div>
         </ScrollableArea>
         <button onClick={this.displayMeasurements}>Display measurements</button>
+        <button onClick={this.saveMetadata}>Save metadata</button>
         <button onClick={this.saveMeasurements}>Save measurements</button>
         <button onClick={this.loadMeasurements}>Load measurements</button>
         <input type="file" id="files" name="files[]" ref="test1" multiple />
