@@ -46,6 +46,7 @@ class MeasurementTable extends Component {
 
   saveMetadata = () => {
     var patientId;
+
     var freehandMetadata = this.props.freehandData;
 
     //Create the metadata to be saved
@@ -56,7 +57,6 @@ class MeasurementTable extends Component {
     }
 
     //Write study metadata
-
     if (freehandMetadata[0]) {
       var studyMetadata = freehandMetadata[0].metadata.study;
       var patientMetadata = freehandMetadata[0].metadata.patient;
@@ -102,13 +102,14 @@ class MeasurementTable extends Component {
       );
     });
 
-    //Loop on keys
+    //Loop on keys (series)
     let indexTxtFile = 19;
     let indexSerie = 0;
     Object.keys(seriesInstanceUids).forEach(function(key) {
       indexSerie += 1;
       var measurementTab = seriesInstanceUids[key];
       var seriesMetadata = measurementTab[0].metadata.series;
+      //Write series metadata
       metadata[indexTxtFile][0] = 'Serie ' + indexSerie + ' Metadata';
       metadata[indexTxtFile + 2][0] = '0008,0021';
       metadata[indexTxtFile + 2][1] = seriesMetadata.seriesDate;
@@ -129,6 +130,7 @@ class MeasurementTable extends Component {
         var instanceMetadata = measurementTab[i].metadata.instance;
         metadata[indexTxtFile][0] =
           'Serie ' + indexSerie + ' instance ' + (i + 1) + ' metadata';
+        //Write instance metadata
         metadata[indexTxtFile + 2][0] = '0020,0011';
         metadata[indexTxtFile + 2][1] = instanceMetadata.seriesNumber;
         metadata[indexTxtFile + 3][0] = '0020,0012';
@@ -159,83 +161,10 @@ class MeasurementTable extends Component {
       }
     });
 
+    //Delete unused instanced tab row
     metadata.length -= size - indexTxtFile;
 
-    console.log('metadata', metadata);
-
-    /*metadata[0][1] = 'test';
-
-    seriesMetadata.seriesDescription.tag = '0008,103E';
-    seriesMetadata.seriesNumber.tag = '0020,0011';
-    seriesMetadata.seriesDate.tag = '0008,0021';
-    seriesMetadata.seriesTime.tag = '0008,0031';
-    seriesMetadata.modality.tag = '0008,0060';
-    seriesMetadata.seriesInstanceUid.tag = '0020,000E';
-    seriesMetadata.numImages.tag = '0020,1003';
-
-    studyMetadata.accessionNumber.tag = '0008,0050';
-    studyMetadata.patientId.tag = '0010,0020';
-    studyMetadata.studyInstanceUid.tag = '0020,000D';
-    studyMetadata.studyDate.tag = '0008,0020';
-    studyMetadata.studyTime.tag = '0008,0030';
-    studyMetadata.studyDescription.tag = '0008,1030';
-    studyMetadata.institutionName.tag = '0008,0080';
-    studyMetadata.patientHistory.tag = '0010,21B0';
-
-    patientMetadata.name.tag = '0010,0010';
-    patientMetadata.id.tag = '0010,0020';
-    patientMetadata.birthDate.tag = '0010,0030';
-    patientMetadata.sex.tag = '0010,0040';
-    patientMetadata.age.tag = '0010,1010';
-
-    instanceMetadata.seriesNumber.tag = '0020,0011';
-    instanceMetadata.acquisitionNumber.tag = '0020,0012';
-    instanceMetadata.imageNumber.tag = '0020,0013';
-    instanceMetadata.imagePositionPatient.tag = '0020,0032';
-    instanceMetadata.imageOrientationPatient.tag = '0020,0037';
-    instanceMetadata.frameOfReferenceUID.tag = '0020,0052';
-    instanceMetadata.laterality.tag = '0020,0060';
-    instanceMetadata.imagesInAcquisition.tag = '0020,1002';
-    instanceMetadata.sliceLocation.tag = '0020,1041';*/
-
-    /*var metadata = {};
-    this.props.freehandData.forEach(function(measurement) {
-      if (!patientId) {
-        patientId = measurement.patientId;
-      }
-      if (!metadata.patientMetadata) {
-        metadata.patientMetadata = measurement.metadata.patient;
-        metadata.studyMetadata = measurement.metadata.study;
-      }
-      if (!metadata[measurement.seriesInstanceUid]) {
-        metadata[measurement.seriesInstanceUid] = [];
-        metadata[measurement.seriesInstanceUid].seriesMetadata =
-          measurement.metadata.series;
-      }
-
-      var instanceMetadata = {
-        seriesNumber: measurement.metadata.instance.seriesNumber,
-        acquisitionNumber: measurement.metadata.instance.acquisitionNumber,
-        imageNumber: measurement.metadata.instance.imageNumber,
-        imagePositionPatient:
-          measurement.metadata.instance.imagePositionPatient,
-        imageOrientationPatient:
-          measurement.metadata.instance.imageOrientationPatient,
-        frameOfReferenceUID: measurement.metadata.instance.frameOfReferenceUID,
-        laterality: measurement.metadata.instance.laterality,
-        imagesInAcquisition: measurement.metadata.instance.imagesInAcquisition,
-        sliceLocation: measurement.metadata.instance.sliceLocation,
-      };
-      instanceMetadata.points = [];
-      measurement.handles.points.forEach(function(FreehandHandleData) {
-        var point = {
-          x: FreehandHandleData.x,
-          y: FreehandHandleData.y,
-        };
-        instanceMetadata.points.push(point);
-      });
-      metadata[measurement.seriesInstanceUid].push(instanceMetadata);
-    });*/
+    //Convert tab into csv content
     let csvContent = metadata.map(e => e.join(',')).join('\n');
 
     //Save in a txt file (csv format)
