@@ -46,9 +46,159 @@ class MeasurementTable extends Component {
 
   saveMetadata = () => {
     var patientId;
+    var freehandMetadata = this.props.freehandData;
 
     //Create the metadata to be saved
-    var metadata = {};
+    var metadata = [];
+    var size = 5000 * freehandMetadata.length;
+    for (let i = 0; i < size; i++) {
+      metadata[i] = [];
+    }
+
+    //Write study metadata
+
+    if (freehandMetadata[0]) {
+      var studyMetadata = freehandMetadata[0].metadata.study;
+      var patientMetadata = freehandMetadata[0].metadata.patient;
+      patientId = patientMetadata.id;
+      metadata[0][0] = 'Patient metadata';
+      metadata[2][0] = '0010,0010';
+      metadata[2][1] = patientMetadata.name;
+      metadata[3][0] = '0010,0020';
+      metadata[3][1] = patientMetadata.id;
+      metadata[4][0] = '0010,0030';
+      metadata[4][1] = patientMetadata.birthDate;
+      metadata[5][0] = '0010,0040';
+      metadata[5][1] = patientMetadata.sex;
+      metadata[6][0] = '0010,1010';
+      metadata[6][1] = patientMetadata.age;
+      metadata[8][0] = 'Study metadata';
+      metadata[10][0] = '0008,0020';
+      metadata[10][1] = studyMetadata.studyDate;
+      metadata[11][0] = '0008,0030';
+      metadata[11][1] = studyMetadata.studyTime;
+      metadata[12][0] = '0008,0050';
+      metadata[12][1] = studyMetadata.accessionNumber;
+      metadata[13][0] = '0008,0080';
+      metadata[13][1] = studyMetadata.institutionName;
+      metadata[14][0] = '0008,1030';
+      metadata[14][1] = studyMetadata.studyDescription;
+      metadata[15][0] = '0010,0020';
+      metadata[15][1] = studyMetadata.patientId;
+      metadata[16][0] = '0010,21B0';
+      metadata[16][1] = studyMetadata.patientHistory;
+      metadata[17][0] = '0020,000D';
+      metadata[17][1] = studyMetadata.studyInstanceUid;
+    }
+
+    var seriesInstanceUids = [];
+    //Sorting measurement by seriesInstanceUID
+    freehandMetadata.forEach(function(measurement) {
+      if (!seriesInstanceUids[measurement.metadata.series.seriesInstanceUid]) {
+        seriesInstanceUids[measurement.metadata.series.seriesInstanceUid] = [];
+      }
+      seriesInstanceUids[measurement.metadata.series.seriesInstanceUid].push(
+        measurement
+      );
+    });
+
+    //Loop on keys
+    let indexTxtFile = 19;
+    let indexSerie = 0;
+    Object.keys(seriesInstanceUids).forEach(function(key) {
+      indexSerie += 1;
+      var measurementTab = seriesInstanceUids[key];
+      var seriesMetadata = measurementTab[0].metadata.series;
+      metadata[indexTxtFile][0] = 'Serie ' + indexSerie + ' Metadata';
+      metadata[indexTxtFile + 2][0] = '0008,0021';
+      metadata[indexTxtFile + 2][1] = seriesMetadata.seriesDate;
+      metadata[indexTxtFile + 3][0] = '0008,0031';
+      metadata[indexTxtFile + 3][1] = seriesMetadata.seriesTime;
+      metadata[indexTxtFile + 4][0] = '0008,103E';
+      metadata[indexTxtFile + 4][1] = seriesMetadata.seriesDescription;
+      metadata[indexTxtFile + 5][0] = '0008,0060';
+      metadata[indexTxtFile + 5][1] = seriesMetadata.modality;
+      metadata[indexTxtFile + 6][0] = '0020,000E';
+      metadata[indexTxtFile + 6][1] = seriesMetadata.seriesInstanceUid;
+      metadata[indexTxtFile + 7][0] = '0020,0011';
+      metadata[indexTxtFile + 7][1] = seriesMetadata.seriesNumber;
+      metadata[indexTxtFile + 8][0] = '0020,1003';
+      metadata[indexTxtFile + 8][1] = seriesMetadata.numImages;
+      indexTxtFile += 10;
+      for (let i = 0; i < measurementTab.length; i++) {
+        var instanceMetadata = measurementTab[i].metadata.instance;
+        metadata[indexTxtFile][0] =
+          'Serie ' + indexSerie + ' instance ' + (i + 1) + ' metadata';
+        metadata[indexTxtFile + 2][0] = '0020,0011';
+        metadata[indexTxtFile + 2][1] = instanceMetadata.seriesNumber;
+        metadata[indexTxtFile + 3][0] = '0020,0012';
+        metadata[indexTxtFile + 3][1] = instanceMetadata.acquisitionNumber;
+        metadata[indexTxtFile + 4][0] = '0020,0013';
+        metadata[indexTxtFile + 4][1] = instanceMetadata.imageNumber;
+        metadata[indexTxtFile + 5][0] = '0020,0032';
+        metadata[indexTxtFile + 5][1] = instanceMetadata.imagePositionPatient;
+        metadata[indexTxtFile + 6][0] = '0020,0037';
+        metadata[indexTxtFile + 6][1] =
+          instanceMetadata.imageOrientationPatient;
+        metadata[indexTxtFile + 7][0] = '0020,0052';
+        metadata[indexTxtFile + 7][1] = instanceMetadata.frameOfReferenceUID;
+        metadata[indexTxtFile + 8][0] = '0020,0060';
+        metadata[indexTxtFile + 8][1] = instanceMetadata.laterality;
+        metadata[indexTxtFile + 9][0] = '0020,1002';
+        metadata[indexTxtFile + 9][1] = instanceMetadata.imagesInAcquisition;
+        metadata[indexTxtFile + 10][0] = '0020,1041';
+        metadata[indexTxtFile + 10][1] = instanceMetadata.sliceLocation;
+        metadata[indexTxtFile + 12][0] = 'Segmentation coordinates';
+        indexTxtFile += 14;
+        measurementTab[i].handles.points.forEach(function(FreehandHandleData) {
+          metadata[indexTxtFile][0] = FreehandHandleData.x;
+          metadata[indexTxtFile][1] = FreehandHandleData.y;
+          indexTxtFile++;
+        });
+        indexTxtFile++;
+      }
+    });
+
+    metadata.length -= size - indexTxtFile;
+
+    console.log('metadata', metadata);
+
+    /*metadata[0][1] = 'test';
+
+    seriesMetadata.seriesDescription.tag = '0008,103E';
+    seriesMetadata.seriesNumber.tag = '0020,0011';
+    seriesMetadata.seriesDate.tag = '0008,0021';
+    seriesMetadata.seriesTime.tag = '0008,0031';
+    seriesMetadata.modality.tag = '0008,0060';
+    seriesMetadata.seriesInstanceUid.tag = '0020,000E';
+    seriesMetadata.numImages.tag = '0020,1003';
+
+    studyMetadata.accessionNumber.tag = '0008,0050';
+    studyMetadata.patientId.tag = '0010,0020';
+    studyMetadata.studyInstanceUid.tag = '0020,000D';
+    studyMetadata.studyDate.tag = '0008,0020';
+    studyMetadata.studyTime.tag = '0008,0030';
+    studyMetadata.studyDescription.tag = '0008,1030';
+    studyMetadata.institutionName.tag = '0008,0080';
+    studyMetadata.patientHistory.tag = '0010,21B0';
+
+    patientMetadata.name.tag = '0010,0010';
+    patientMetadata.id.tag = '0010,0020';
+    patientMetadata.birthDate.tag = '0010,0030';
+    patientMetadata.sex.tag = '0010,0040';
+    patientMetadata.age.tag = '0010,1010';
+
+    instanceMetadata.seriesNumber.tag = '0020,0011';
+    instanceMetadata.acquisitionNumber.tag = '0020,0012';
+    instanceMetadata.imageNumber.tag = '0020,0013';
+    instanceMetadata.imagePositionPatient.tag = '0020,0032';
+    instanceMetadata.imageOrientationPatient.tag = '0020,0037';
+    instanceMetadata.frameOfReferenceUID.tag = '0020,0052';
+    instanceMetadata.laterality.tag = '0020,0060';
+    instanceMetadata.imagesInAcquisition.tag = '0020,1002';
+    instanceMetadata.sliceLocation.tag = '0020,1041';*/
+
+    /*var metadata = {};
     this.props.freehandData.forEach(function(measurement) {
       if (!patientId) {
         patientId = measurement.patientId;
@@ -85,13 +235,12 @@ class MeasurementTable extends Component {
         instanceMetadata.points.push(point);
       });
       metadata[measurement.seriesInstanceUid].push(instanceMetadata);
-    });
+    });*/
+    let csvContent = metadata.map(e => e.join(',')).join('\n');
 
-    console.log('metadata', metadata);
-    //Save in a txt file (JSON format)
-    var jsonString = JSON.stringify(metadata);
+    //Save in a txt file (csv format)
     var FileSaver = require('file-saver');
-    var blob = new Blob([jsonString], {
+    var blob = new Blob([csvContent], {
       type: 'text/plain;charset=utf-8',
     });
     FileSaver.saveAs(blob, patientId + 'metadata');
@@ -220,11 +369,26 @@ class MeasurementTable extends Component {
         <ScrollableArea>
           <div>{this.getMeasurementsGroups()}</div>
         </ScrollableArea>
-        <button onClick={this.displayMeasurements}>Display measurements</button>
-        <button onClick={this.saveMetadata}>Save metadata</button>
-        <button onClick={this.saveMeasurements}>Save measurements</button>
-        <button onClick={this.loadMeasurements}>Load measurements</button>
-        <input type="file" id="files" name="files[]" ref="test1" multiple />
+        <button onClick={this.displayMeasurements} className="button">
+          Display measurements
+        </button>
+        <button onClick={this.saveMetadata} className="button">
+          Save metadata
+        </button>
+        <button onClick={this.saveMeasurements} className="button">
+          Save measurements
+        </button>
+        <button onClick={this.loadMeasurements} className="button">
+          Load measurements
+        </button>
+        <input
+          type="file"
+          id="files"
+          name="files[]"
+          ref="test1"
+          multiple
+          className="button"
+        />
       </div>
     );
   }
