@@ -10,6 +10,7 @@ import PropTypes from 'prop-types';
 import { ScrollableArea } from './../../ScrollableArea/ScrollableArea.js';
 import { TableList } from './../tableList';
 import { Tooltip } from './../tooltip';
+import { DICOMTagDescriptions } from './DICOMTagDescriptions.js';
 
 import conerstoneTools from 'cornerstone-tools';
 
@@ -42,6 +43,9 @@ class MeasurementTable extends Component {
 
   displayMeasurements = () => {
     console.log('Freehand Data : ', this.props.freehandData);
+    console.log(DICOMTagDescriptions);
+    console.log(DICOMTagDescriptions.tagNumberToString(1048592));
+    console.log(DICOMTagDescriptions.find('x00100010'));
   };
 
   saveMetadata = () => {
@@ -63,32 +67,32 @@ class MeasurementTable extends Component {
       patientId = patientMetadata.id;
       metadata[0][0] = 'Patient metadata';
       metadata[2][0] = '0010,0010';
-      metadata[2][1] = patientMetadata.name;
+      metadata[2][2] = patientMetadata.name;
       metadata[3][0] = '0010,0020';
-      metadata[3][1] = patientMetadata.id;
+      metadata[3][2] = patientMetadata.id;
       metadata[4][0] = '0010,0030';
-      metadata[4][1] = patientMetadata.birthDate;
+      metadata[4][2] = patientMetadata.birthDate;
       metadata[5][0] = '0010,0040';
-      metadata[5][1] = patientMetadata.sex;
+      metadata[5][2] = patientMetadata.sex;
       metadata[6][0] = '0010,1010';
-      metadata[6][1] = patientMetadata.age;
+      metadata[6][2] = patientMetadata.age;
       metadata[8][0] = 'Study metadata';
       metadata[10][0] = '0008,0020';
-      metadata[10][1] = studyMetadata.studyDate;
+      metadata[10][2] = studyMetadata.studyDate;
       metadata[11][0] = '0008,0030';
-      metadata[11][1] = studyMetadata.studyTime;
+      metadata[11][2] = studyMetadata.studyTime;
       metadata[12][0] = '0008,0050';
-      metadata[12][1] = studyMetadata.accessionNumber;
+      metadata[12][2] = studyMetadata.accessionNumber;
       metadata[13][0] = '0008,0080';
-      metadata[13][1] = studyMetadata.institutionName;
+      metadata[13][2] = studyMetadata.institutionName;
       metadata[14][0] = '0008,1030';
-      metadata[14][1] = studyMetadata.studyDescription;
+      metadata[14][2] = studyMetadata.studyDescription;
       metadata[15][0] = '0010,0020';
-      metadata[15][1] = studyMetadata.patientId;
-      metadata[16][0] = '0010,21B0';
-      metadata[16][1] = studyMetadata.patientHistory;
-      metadata[17][0] = '0020,000D';
-      metadata[17][1] = studyMetadata.studyInstanceUid;
+      metadata[15][2] = studyMetadata.patientId;
+      metadata[16][0] = '0010,21b0';
+      metadata[16][2] = studyMetadata.patientHistory;
+      metadata[17][0] = '0020,000d';
+      metadata[17][2] = studyMetadata.studyInstanceUid;
     }
 
     var seriesInstanceUids = [];
@@ -112,46 +116,53 @@ class MeasurementTable extends Component {
       //Write series metadata
       metadata[indexTxtFile][0] = 'Serie ' + indexSerie + ' Metadata';
       metadata[indexTxtFile + 2][0] = '0008,0021';
-      metadata[indexTxtFile + 2][1] = seriesMetadata.seriesDate;
+      metadata[indexTxtFile + 2][2] = seriesMetadata.seriesDate;
       metadata[indexTxtFile + 3][0] = '0008,0031';
-      metadata[indexTxtFile + 3][1] = seriesMetadata.seriesTime;
-      metadata[indexTxtFile + 4][0] = '0008,103E';
-      metadata[indexTxtFile + 4][1] = seriesMetadata.seriesDescription;
+      metadata[indexTxtFile + 3][2] = seriesMetadata.seriesTime;
+      metadata[indexTxtFile + 4][0] = '0008,103e';
+      metadata[indexTxtFile + 4][2] = seriesMetadata.seriesDescription;
       metadata[indexTxtFile + 5][0] = '0008,0060';
-      metadata[indexTxtFile + 5][1] = seriesMetadata.modality;
-      metadata[indexTxtFile + 6][0] = '0020,000E';
-      metadata[indexTxtFile + 6][1] = seriesMetadata.seriesInstanceUid;
+      metadata[indexTxtFile + 5][2] = seriesMetadata.modality;
+      metadata[indexTxtFile + 6][0] = '0020,000e';
+      metadata[indexTxtFile + 6][2] = seriesMetadata.seriesInstanceUid;
       metadata[indexTxtFile + 7][0] = '0020,0011';
-      metadata[indexTxtFile + 7][1] = seriesMetadata.seriesNumber;
+      metadata[indexTxtFile + 7][2] = seriesMetadata.seriesNumber;
       metadata[indexTxtFile + 8][0] = '0020,1003';
-      metadata[indexTxtFile + 8][1] = seriesMetadata.numImages;
+      metadata[indexTxtFile + 8][2] = seriesMetadata.numImages;
       indexTxtFile += 10;
       for (let i = 0; i < measurementTab.length; i++) {
         var instanceMetadata = measurementTab[i].metadata.instance;
+        console.log(instanceMetadata);
         metadata[indexTxtFile][0] =
           'Serie ' + indexSerie + ' instance ' + (i + 1) + ' metadata';
         //Write instance metadata
         metadata[indexTxtFile + 2][0] = '0020,0011';
-        metadata[indexTxtFile + 2][1] = instanceMetadata.seriesNumber;
+        metadata[indexTxtFile + 2][2] = instanceMetadata.seriesNumber;
         metadata[indexTxtFile + 3][0] = '0020,0012';
-        metadata[indexTxtFile + 3][1] = instanceMetadata.acquisitionNumber;
+        metadata[indexTxtFile + 3][2] = instanceMetadata.acquisitionNumber;
         metadata[indexTxtFile + 4][0] = '0020,0013';
-        metadata[indexTxtFile + 4][1] = instanceMetadata.imageNumber;
+        metadata[indexTxtFile + 4][2] = instanceMetadata.imageNumber;
         metadata[indexTxtFile + 5][0] = '0020,0032';
-        metadata[indexTxtFile + 5][1] = instanceMetadata.imagePositionPatient;
+        metadata[indexTxtFile + 5][2] = instanceMetadata.imagePositionPatient;
         metadata[indexTxtFile + 6][0] = '0020,0037';
-        metadata[indexTxtFile + 6][1] =
+        metadata[indexTxtFile + 6][2] =
           instanceMetadata.imageOrientationPatient;
         metadata[indexTxtFile + 7][0] = '0020,0052';
-        metadata[indexTxtFile + 7][1] = instanceMetadata.frameOfReferenceUID;
+        metadata[indexTxtFile + 7][2] = instanceMetadata.frameOfReferenceUID;
         metadata[indexTxtFile + 8][0] = '0020,0060';
-        metadata[indexTxtFile + 8][1] = instanceMetadata.laterality;
+        metadata[indexTxtFile + 8][2] = instanceMetadata.laterality;
         metadata[indexTxtFile + 9][0] = '0020,1002';
-        metadata[indexTxtFile + 9][1] = instanceMetadata.imagesInAcquisition;
+        metadata[indexTxtFile + 9][2] = instanceMetadata.imagesInAcquisition;
         metadata[indexTxtFile + 10][0] = '0020,1041';
-        metadata[indexTxtFile + 10][1] = instanceMetadata.sliceLocation;
+        metadata[indexTxtFile + 10][2] = instanceMetadata.sliceLocation;
         metadata[indexTxtFile + 12][0] = 'Segmentation coordinates';
-        indexTxtFile += 14;
+        metadata[indexTxtFile + 13][0] = 'height';
+        metadata[indexTxtFile + 13][1] = instanceMetadata.height;
+        metadata[indexTxtFile + 14][0] = 'width';
+        metadata[indexTxtFile + 14][1] = instanceMetadata.width;
+        metadata[indexTxtFile + 15][0] = 'pixel spacing';
+        metadata[indexTxtFile + 15][1] = instanceMetadata.pixelSpacing;
+        indexTxtFile += 17;
         measurementTab[i].handles.points.forEach(function(FreehandHandleData) {
           metadata[indexTxtFile][0] = FreehandHandleData.x;
           metadata[indexTxtFile][1] = FreehandHandleData.y;
@@ -163,6 +174,18 @@ class MeasurementTable extends Component {
 
     //Delete unused instanced tab row
     metadata.length -= size - indexTxtFile;
+
+    for (let i = 0; i < metadata.length; i++) {
+      if (
+        metadata[i][0] &&
+        typeof metadata[i][0] === 'string' &&
+        metadata[i][0].charAt(4) == ','
+      ) {
+        metadata[i][1] = DICOMTagDescriptions.find(
+          'x' + metadata[i][0].replace(',', '')
+        ).keyword;
+      }
+    }
 
     //Convert tab into csv content
     let csvContent = metadata.map(e => e.join(',')).join('\n');
