@@ -13,6 +13,7 @@ import { Tooltip } from './../tooltip';
 import { DICOMTagDescriptions } from './DICOMTagDescriptions.js';
 
 import conerstoneTools from 'cornerstone-tools';
+import { api } from 'dicomweb-client';
 
 class MeasurementTable extends Component {
   static propTypes = {
@@ -28,6 +29,7 @@ class MeasurementTable extends Component {
     selectedMeasurementNumber: PropTypes.number,
     overwallWarnings: PropTypes.object,
     t: PropTypes.func,
+    loadedFile: PropTypes.string,
   };
 
   static defaultProps = {
@@ -132,7 +134,6 @@ class MeasurementTable extends Component {
       indexTxtFile += 10;
       for (let i = 0; i < measurementTab.length; i++) {
         var instanceMetadata = measurementTab[i].metadata.instance;
-        console.log(instanceMetadata);
         metadata[indexTxtFile][0] =
           'Serie ' + indexSerie + ' instance ' + (i + 1) + ' metadata';
         //Write instance metadata
@@ -229,12 +230,49 @@ class MeasurementTable extends Component {
     var blob = new Blob([jsonString], {
       type: 'text/plain;charset=utf-8',
     });
+    if (patientId == this.loadedFile) {
+      console.log('existing');
+    }
     FileSaver.saveAs(blob, patientId);
+  };
+
+  saveDICOMInstance = () => {
+    const config = {
+      //THIS IS WRONG. FIND A WAY TO GET WADOROOT
+      url: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs',
+      //Header useless?
+      //headers: DICOMWeb.getAuthorizationHeader(server),
+    };
+    const dicomWeb = new api.DICOMwebClient(config);
+
+    //Get the ID of the current displayed image
+    var enabledElement = cornerstoneTools.external.cornerstone.getEnabledElements()[0];
+    var enabledImageId = enabledElement.image.imageId;
+    const splitImageId = enabledImageId.split('/');
+
+    const enabledStudyInstanceUID = splitImageId[8];
+    const enabledSeriesInstanceUID = splitImageId[10];
+    const enabledSopInstanceUID = splitImageId[12];
+
+    const options = {
+      studyInstanceUID: enabledStudyInstanceUID,
+      seriesInstanceUID: enabledSeriesInstanceUID,
+      sopInstanceUID: enabledSopInstanceUID,
+    };
+
+    dicomWeb.retrieveInstance(options).then(instance => {
+      var FileSaver = require('file-saver');
+      var blob = new Blob([instance], { type: 'text/plain;charset=utf-8' });
+      FileSaver.saveAs(blob, 'instance.dcm');
+    });
   };
 
   loadMeasurements = () => {
     var reader = new FileReader();
     var fileText = '';
+    if (this.refs.test1.files[0]) {
+      this.loadedFile = this.refs.test1.files[0].name.split('.')[0];
+    }
 
     reader.onload = function(event) {
       fileText = reader.result;
@@ -279,7 +317,7 @@ class MeasurementTable extends Component {
     if (this.refs.test1.files[0]) {
       reader.readAsText(this.refs.test1.files[0]);
     } else {
-      console.log('Aucun fichier de mesure renseigné');
+      console.error('No measurement file specified');
     }
   };
 
@@ -332,6 +370,9 @@ class MeasurementTable extends Component {
         </button>
         <button onClick={this.loadMeasurements} className="button">
           Load measurements
+        </button>
+        <button onClick={this.saveDICOMInstance} className="button">
+          Save DICOM instance
         </button>
         <input
           type="file"
