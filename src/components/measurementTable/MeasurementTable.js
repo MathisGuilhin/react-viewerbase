@@ -43,13 +43,6 @@ class MeasurementTable extends Component {
     selectedKey: null,
   };
 
-  displayMeasurements = () => {
-    console.log('Freehand Data : ', this.props.freehandData);
-    console.log(DICOMTagDescriptions);
-    console.log(DICOMTagDescriptions.tagNumberToString(1048592));
-    console.log(DICOMTagDescriptions.find('x00100010'));
-  };
-
   saveMetadata = () => {
     var patientId;
 
@@ -238,21 +231,24 @@ class MeasurementTable extends Component {
 
   saveDICOMInstance = () => {
     const config = {
-      //THIS IS WRONG. FIND A WAY TO GET WADOROOT
-      url: 'https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs',
-      //Header useless?
-      //headers: DICOMWeb.getAuthorizationHeader(server),
+      url: window.config.servers.dicomWeb[0].qidoRoot,
+      //headers seems useless
+      //headers: DICOMWeb.getAuthorizationHeader(window.config.servers.dicomWeb[0]),
     };
     const dicomWeb = new api.DICOMwebClient(config);
 
     //Get the ID of the current displayed image
     var enabledElement = cornerstoneTools.external.cornerstone.getEnabledElements()[0];
     var enabledImageId = enabledElement.image.imageId;
-    const splitImageId = enabledImageId.split('/');
+    enabledImageId = enabledImageId.substring(
+      enabledImageId.indexOf(config.url) + config.url.length
+    );
+    var splitImageId = enabledImageId.split('/');
+    console.log(splitImageId);
 
-    const enabledStudyInstanceUID = splitImageId[8];
-    const enabledSeriesInstanceUID = splitImageId[10];
-    const enabledSopInstanceUID = splitImageId[12];
+    const enabledStudyInstanceUID = splitImageId[2];
+    const enabledSeriesInstanceUID = splitImageId[4];
+    const enabledSopInstanceUID = splitImageId[6];
 
     const options = {
       studyInstanceUID: enabledStudyInstanceUID,
@@ -286,7 +282,9 @@ class MeasurementTable extends Component {
 
       for (let i = 0; i < measurementsLoaded.length; i++) {
         var imageId =
-          'wadors:https://server.dcmjs.org/dcm4chee-arc/aets/DCM4CHEE/rs/studies/' +
+          'wadors:' +
+          window.config.servers.dicomWeb[0].qidoRoot +
+          '/studies/' +
           measurementsLoaded[i].studyInstanceUid +
           '/series/' +
           measurementsLoaded[i].seriesInstanceUid +
@@ -359,20 +357,17 @@ class MeasurementTable extends Component {
         <ScrollableArea>
           <div>{this.getMeasurementsGroups()}</div>
         </ScrollableArea>
-        <button onClick={this.displayMeasurements} className="button">
-          Display measurements
-        </button>
         <button onClick={this.saveMetadata} className="button">
           Save metadata
         </button>
         <button onClick={this.saveMeasurements} className="button">
           Save measurements
         </button>
-        <button onClick={this.loadMeasurements} className="button">
-          Load measurements
-        </button>
         <button onClick={this.saveDICOMInstance} className="button">
           Save DICOM instance
+        </button>
+        <button onClick={this.loadMeasurements} className="button">
+          Load measurements
         </button>
         <input
           type="file"
